@@ -1,0 +1,24 @@
+traditional_to_simplified:
+  歲入: 岁入
+  兩稅: 两税
+  商稅: 商税
+  市稅: 市税
+  課利: 课利
+  和糴: 和籴
+  平糴: 平籴
+  漕運: 漕运
+  轉運: 转运
+  京師: 京师
+  邊: 边
+  軍儲: 军储
+  緡: 缗
+
+concept_groups:
+  total_tax: [岁入, 总税, 会计, 上供]
+  liangshui: [两税, 夏税, 秋税]
+  commercial_tax: [商税, 市税, 课利, 榷]
+  grainflow: [和籴, 平籴, 漕运, 转运, 京师, 边, 军储, 支移]
+
+weak_syntax_markers:
+  aggregate: [凡, 计, 共, 总计, 其数, 岁额]
+  transfer: [上供, 输, 供, 给]

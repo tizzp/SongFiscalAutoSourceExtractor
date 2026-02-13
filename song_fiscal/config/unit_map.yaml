@@ -1,0 +1,16 @@
+currency:
+  貫: {normalized_unit: guan, multiplier: 1}
+  贯: {normalized_unit: guan, multiplier: 1}
+  緡: {normalized_unit: guan, multiplier: 1}
+  缗: {normalized_unit: guan, multiplier: 1}
+  文: {normalized_unit: wen, multiplier: 1}
+
+grain:
+  石: {normalized_unit: shi, multiplier: 1}
+  斛: {normalized_unit: hu, multiplier: 1}
+  斗: {normalized_unit: dou, multiplier: 1}
+  升: {normalized_unit: sheng, multiplier: 1}
+
+share:
+  成: {normalized_unit: ratio_tenth, multiplier: 0.1}
+  分: {normalized_unit: ratio_hundredth, multiplier: 0.01}

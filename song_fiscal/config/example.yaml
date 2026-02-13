@@ -1,0 +1,59 @@
+project:
+  output_dir: outputs
+  request_timeout_s: 20
+  user_agent: SongFiscalExtractor/0.1 (+academic-research)
+
+periods:
+  xining:
+    label: 熙宁
+    start_year: 1068
+    end_year: 1077
+    aliases: [熙宁]
+  yuanfeng:
+    label: 元丰
+    start_year: 1078
+    end_year: 1085
+    aliases: [元丰]
+  shaosheng:
+    label: 绍圣
+    start_year: 1094
+    end_year: 1098
+    aliases: [绍圣]
+  huizong:
+    label: 徽宗朝
+    start_year: 1100
+    end_year: 1125
+    aliases: [建中靖国, 崇宁, 大观, 政和, 重和, 宣和, 徽宗]
+
+sources:
+  tier_a:
+    - name: ctext_songshi
+      book: 宋史
+      base_url: https://ctext.org/wiki.pl
+      query: "if=gb&chapter=399652"
+      parser: ctext
+    - name: wikisource_songshi
+      book: 宋史
+      base_url: https://zh.wikisource.org/wiki/宋史
+      parser: wikisource
+    - name: wikisource_songhuiyao
+      book: 宋會要輯稿
+      base_url: https://zh.wikisource.org/wiki/宋會要輯稿
+      parser: wikisource
+  tier_c:
+    - name: wikipedia_song_dynasty_economy
+      base_url: https://zh.wikipedia.org/wiki/宋朝經濟
+      parser: generic
+
+metrics:
+  total_tax: [歲入, 岁入, 總稅, 总税, 會計, 会计, 上供]
+  liangshui_share: [兩稅, 两税, 夏稅, 秋稅]
+  commercial_tax: [商稅, 商税, 市稅, 市税, 課利, 课利, 榷]
+  commercial_structure: [鹽, 盐, 酒, 茶, 商稅門, 商税门]
+  pingdi_or_hedi: [平糴, 平籴, 和糴, 和籴]
+  supply_capital: [京師, 京师, 供京, 漕運, 漕运, 轉運, 转运]
+  supply_frontier: [邊, 边, 軍儲, 军储, 支移]
+
+run:
+  min_confidence: 0.45
+  excerpt_window: 40
