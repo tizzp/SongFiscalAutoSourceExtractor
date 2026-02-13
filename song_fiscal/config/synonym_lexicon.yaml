@@ -4,8 +4,12 @@ traditional_to_simplified:
   商稅: 商税
   市稅: 市税
   課利: 课利
+  榷鹽: 榷盐
+  榷酒: 榷酒
+  榷茶: 榷茶
   和糴: 和籴
   平糴: 平籴
+  均糴: 均籴
   漕運: 漕运
   轉運: 转运
   京師: 京师
@@ -14,11 +18,14 @@ traditional_to_simplified:
   緡: 缗
 
 concept_groups:
-  total_tax: [岁入, 总税, 会计, 上供]
-  liangshui: [两税, 夏税, 秋税]
-  commercial_tax: [商税, 市税, 课利, 榷]
-  grainflow: [和籴, 平籴, 漕运, 转运, 京师, 边, 军储, 支移]
+  total_tax: [岁入, 会计, 上供, 两税]
+  liangshui_share: [两税, 夏税, 秋税]
+  commercial_tax: [商税, 市税, 课利, 榷, 榷盐, 榷酒, 榷茶]
+  commercial_structure: [盐, 酒, 茶, 榷]
+  pingdi_or_hedi: [和籴, 平籴, 均籴]
+  supply_capital: [京师, 漕运, 转运, 入京]
+  supply_frontier: [边, 军储, 支移, 边储]
 
 weak_syntax_markers:
-  aggregate: [凡, 计, 共, 总计, 其数, 岁额]
-  transfer: [上供, 输, 供, 给]
+  aggregate: [凡, 计, 共, 总计, 其数, 岁额, 会计]
+  transfer: [上供, 输, 供, 给, 入京]
