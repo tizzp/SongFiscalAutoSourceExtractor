@@ -10,17 +10,18 @@ def derive_ratios(records_df: pd.DataFrame) -> pd.DataFrame:
     # placeholder strictness: only derive when both numerator and denominator exist in same period/region.
     to_add = []
     for (period, region), grp in df.groupby(["period", "region"], dropna=False):
-        total = grp[grp["metric"] == "total_tax"]["value"].dropna()
-        commer = grp[grp["metric"] == "commercial_tax"]["value"].dropna()
+        total = grp[grp["metric"] == "total_tax"]["value_std"].dropna()
+        commer = grp[grp["metric"] == "commercial_tax"]["value_std"].dropna()
         if not total.empty and not commer.empty:
             ratio = commer.iloc[0] / total.iloc[0] if total.iloc[0] else None
             if ratio is not None:
                 row = grp.iloc[0].to_dict()
                 row["metric"] = "commercial_share"
-                row["value"] = ratio
-                row["unit"] = "ratio"
-                row["raw_number"] = None
-                row["raw_unit"] = None
+                row["value_std"] = ratio
+                row["unit_std"] = "ratio"
+                row["value_raw"] = None
+                row["unit_raw"] = None
+                row["parse_notes"] = "derived"
                 row["context_rule"] = "derived"
                 row["primary_record_id"] = f"DRV-{period}-{region or 'NAT'}-commercial_share"
                 row["confidence"] = 0.6

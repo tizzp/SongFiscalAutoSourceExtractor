@@ -16,5 +16,8 @@ class TextNormalizer:
             s = s.replace(traditional, simplified)
         return s
 
+    def normalize_pair(self, text: str) -> tuple[str, str]:
+        return text, self.normalize(text)
+
     def normalize_keyword(self, keyword: str) -> str:
         return self.normalize(keyword)

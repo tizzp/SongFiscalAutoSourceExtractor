@@ -45,11 +45,13 @@ def parse_numbers_with_units(text: str, unit_map: dict[str, Any]) -> list[dict[s
         mapping = merged.get(unit_raw, {"normalized_unit": unit_raw, "multiplier": 1})
         out.append(
             {
-                "raw_number": num_raw,
+                "value_raw": num_raw,
                 "raw_unit": unit_raw,
-                "value": value,
-                "normalized_unit": mapping["normalized_unit"],
-                "normalized_value": value * float(mapping.get("multiplier", 1)),
+                "unit_raw": unit_raw,
+                "value_std": value * float(mapping.get("multiplier", 1)),
+                "unit_std": mapping["normalized_unit"],
+                "parse_confidence": 0.9,
+                "parse_notes": "regex+cn_digit_parser",
                 "span": m.span(),
             }
         )

@@ -1,58 +1,75 @@
 project:
   output_dir: outputs
   request_timeout_s: 20
-  user_agent: SongFiscalExtractor/0.1 (+academic-research)
+  user_agent: SongFiscalExtractor/0.2 (+academic-research)
 
 periods:
-  xining:
-    label: 熙宁
-    start_year: 1068
-    end_year: 1077
-    aliases: [熙宁]
-  yuanfeng:
-    label: 元丰
-    start_year: 1078
-    end_year: 1085
-    aliases: [元丰]
-  shaosheng:
-    label: 绍圣
-    start_year: 1094
-    end_year: 1098
-    aliases: [绍圣]
-  huizong:
-    label: 徽宗朝
-    start_year: 1100
-    end_year: 1125
-    aliases: [建中靖国, 崇宁, 大观, 政和, 重和, 宣和, 徽宗]
+  xining: {label: 熙宁, start_year: 1068, end_year: 1077, aliases: [熙宁]}
+  yuanfeng: {label: 元丰, start_year: 1078, end_year: 1085, aliases: [元丰]}
+  shaosheng: {label: 绍圣, start_year: 1094, end_year: 1098, aliases: [绍圣]}
+  huizong: {label: 徽宗朝, start_year: 1100, end_year: 1125, aliases: [建中靖国, 崇宁, 大观, 政和, 重和, 宣和, 徽宗]}
+
+rounds:
+  1:
+    sources_allowlist: [ctext_songshi_shihuo, wikisource_songshi_shihuo]
+    metrics_allowlist: [total_tax, liangshui_share, commercial_tax, commercial_share, commercial_structure]
+    window_chars: 240
+    keyword_overrides:
+      total_tax: {required_terms: [岁入], optional_terms: [会计, 上供, 两税]}
+      commercial_tax: {required_terms: [商税], optional_terms: [课利, 榷盐, 榷酒, 榷茶]}
+  2:
+    sources_allowlist: [wikisource_songhuiyao_shihuo_hedi, wikisource_songhuiyao_shihuo_caoyun]
+    metrics_allowlist: [pingdi_or_hedi, supply_capital, supply_frontier]
+    window_chars: 240
+    keyword_overrides:
+      pingdi_or_hedi: {required_terms: [和籴], optional_terms: [平籴, 均籴]}
+      supply_capital: {required_terms: [京师], optional_terms: [漕运, 转运, 入京]}
+      supply_frontier: {required_terms: [军储], optional_terms: [边储, 支移, 边]}
+
+backtrace:
+  enable: false
+  value_tolerance_pct: 0.01
+  require_unit_match: true
+  require_period_match: true
+
+extraction:
+  paragraph_scan: true
+  context_chars: {before: 120, after: 120}
 
 sources:
   tier_a:
-    - name: ctext_songshi
+    - name: ctext_songshi_shihuo
       book: 宋史
       base_url: https://ctext.org/wiki.pl
       query: "if=gb&chapter=399652"
       parser: ctext
-    - name: wikisource_songshi
+    - name: wikisource_songshi_shihuo
       book: 宋史
-      base_url: https://zh.wikisource.org/wiki/宋史
+      base_url: https://zh.wikisource.org/wiki/宋史/卷175
       parser: wikisource
-    - name: wikisource_songhuiyao
-      book: 宋會要輯稿
-      base_url: https://zh.wikisource.org/wiki/宋會要輯稿
+    - name: wikisource_songhuiyao_shihuo_hedi
+      book: 宋会要辑稿
+      base_url: https://zh.wikisource.org/wiki/宋會要輯稿/食貨一
+      parser: wikisource
+    - name: wikisource_songhuiyao_shihuo_caoyun
+      book: 宋会要辑稿
+      base_url: https://zh.wikisource.org/wiki/宋會要輯稿/食貨六十
       parser: wikisource
   tier_c:
     - name: wikipedia_song_dynasty_economy
+      book: 现代二手资料
       base_url: https://zh.wikipedia.org/wiki/宋朝經濟
       parser: generic
 
 metrics:
-  total_tax: [歲入, 岁入, 總稅, 总税, 會計, 会计, 上供]
-  liangshui_share: [兩稅, 两税, 夏稅, 秋稅]
-  commercial_tax: [商稅, 商税, 市稅, 市税, 課利, 课利, 榷]
-  commercial_structure: [鹽, 盐, 酒, 茶, 商稅門, 商税门]
-  pingdi_or_hedi: [平糴, 平籴, 和糴, 和籴]
-  supply_capital: [京師, 京师, 供京, 漕運, 漕运, 轉運, 转运]
-  supply_frontier: [邊, 边, 軍儲, 军储, 支移]
+  total_tax: [岁入, 会计, 上供, 两税]
+  liangshui_share: [两税, 夏税, 秋税]
+  commercial_tax: [商税, 市税, 课利, 榷盐, 榷酒, 榷茶]
+  commercial_share: [商税占比, 商税比重]
+  commercial_structure: [盐, 酒, 茶, 榷]
+  pingdi_or_hedi: [和籴, 平籴, 均籴]
+  supply_capital: [京师, 漕运, 转运, 入京]
+  supply_frontier: [边, 军储, 支移, 边储]
 
 run:
   min_confidence: 0.45

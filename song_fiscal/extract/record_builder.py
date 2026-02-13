@@ -12,18 +12,28 @@ class AtomicRecord:
     primary_record_id: str
     source_id: str
     source_tier: str
-    book: str
+    book_title: str
+    section_path: str
+    paragraph_index: int
+    paragraph_hash: str
+    citation_key: str
     metric: str
     period: str
     time_detail: str
     time_precision: str
     region: str | None
     north_south: str | None
-    value: float | None
-    unit: str | None
-    raw_number: str | None
-    raw_unit: str | None
+    value_raw: str | None
+    unit_raw: str | None
+    value_std: float | None
+    unit_std: str | None
+    parse_confidence: float | None
+    parse_notes: str | None
+    raw_text: str
+    normalized_text: str
     excerpt: str
+    context_before: str
+    context_after: str
     source_url: str
     source_anchor: str | None
     confidence: float
@@ -60,98 +70,81 @@ def _load_map(csv_path: str, key_col: str, val_col: str) -> dict[str, str]:
 
 
 def build_records(
-    normalized_text: str,
-    raw_text: str,
     source_meta: dict[str, Any],
+    paragraphs: list[dict[str, Any]],
     query_plan: list[Any],
     config: dict[str, Any],
     unit_map: dict[str, Any],
     gazetteer_path: str,
     north_south_map_path: str,
-    offset_seed: int = 0,
 ) -> list[AtomicRecord]:
     recs: list[AtomicRecord] = []
     periods = config["periods"]
     min_conf = float(config["run"].get("min_confidence", 0.45))
-    window = int(config["run"].get("excerpt_window", 40))
+    context_before = int(config.get("extraction", {}).get("context_chars", {}).get("before", 120))
+    context_after = int(config.get("extraction", {}).get("context_chars", {}).get("after", 120))
 
     gaz = _load_map(gazetteer_path, "raw_name", "normalized_name")
     ns_map = _load_map(north_south_map_path, "region", "north_south")
 
-    for i, p in enumerate(query_plan):
-        for kw in p.keywords:
-            start = 0
-            while True:
-                idx = normalized_text.find(kw, start)
-                if idx < 0:
+    for paragraph in paragraphs:
+        para_raw = paragraph["text"]
+        para_norm = paragraph["normalized_text"]
+        for p in query_plan:
+            if p.required_terms and not all(term in para_norm for term in p.required_terms):
+                continue
+            if not any(kw in para_norm for kw in p.keywords):
+                continue
+            excerpt = para_raw
+            numbers = parse_numbers_with_units(excerpt, unit_map)
+            period, time_detail, precision = _detect_period(excerpt, periods)
+            region = None
+            for r_raw, r_norm in gaz.items():
+                if r_raw in excerpt or r_norm in excerpt:
+                    region = r_norm
                     break
-                span_start = max(0, idx - window)
-                span_end = min(len(normalized_text), idx + len(kw) + window)
-                excerpt = raw_text[span_start:span_end]
-                numbers = parse_numbers_with_units(excerpt, unit_map)
-                period, time_detail, precision = _detect_period(excerpt, periods)
-                region = None
-                for r_raw, r_norm in gaz.items():
-                    if r_raw in excerpt or r_norm in excerpt:
-                        region = r_norm
-                        break
-                context_rule = "weak_syntax"
-                if any(marker in excerpt for marker in ["凡", "计", "共", "其数", "岁额", "上供"]):
-                    context_rule = "aggregate_marker"
-                confidence = 0.55 if numbers else 0.4
-                if context_rule == "aggregate_marker":
-                    confidence += 0.2
-                if period != "unknown":
-                    confidence += 0.1
-                if confidence < min_conf:
-                    start = idx + len(kw)
-                    continue
-                if not numbers:
-                    rec = AtomicRecord(
-                        primary_record_id=f"PR-{offset_seed+i}-{idx}",
-                        source_id=source_meta["source_id"],
-                        source_tier=source_meta["tier"],
-                        book=source_meta["book"],
-                        metric=p.metric,
-                        period=period,
-                        time_detail=time_detail,
-                        time_precision=precision,
-                        region=region,
-                        north_south=ns_map.get(region) if region else None,
-                        value=None,
-                        unit=None,
-                        raw_number=None,
-                        raw_unit=None,
-                        excerpt=excerpt,
-                        source_url=source_meta["url"],
-                        source_anchor=source_meta.get("anchor"),
-                        confidence=round(confidence, 3),
-                        context_rule=context_rule,
+            context_rule = "aggregate_marker" if any(marker in excerpt for marker in ["凡", "计", "共", "其数", "岁额", "上供"]) else "weak_syntax"
+            confidence = (0.55 if numbers else 0.4) + (0.2 if context_rule == "aggregate_marker" else 0) + (0.1 if period != "unknown" else 0)
+            if confidence < min_conf:
+                continue
+            base = dict(
+                source_id=source_meta["source_id"],
+                source_tier=source_meta["tier"],
+                book_title=source_meta["book"],
+                section_path=paragraph["section_path"],
+                paragraph_index=paragraph["paragraph_index"],
+                paragraph_hash=paragraph["paragraph_hash"],
+                citation_key=f"{source_meta['source_id']}::{paragraph['section_path']}::{paragraph['paragraph_index']}",
+                metric=p.metric,
+                period=period,
+                time_detail=time_detail,
+                time_precision=precision,
+                region=region,
+                north_south=ns_map.get(region) if region else None,
+                raw_text=para_raw,
+                normalized_text=para_norm,
+                excerpt=excerpt,
+                context_before=para_raw[:context_before],
+                context_after=para_raw[-context_after:],
+                source_url=source_meta["url"],
+                source_anchor=source_meta.get("anchor"),
+                confidence=round(confidence, 3),
+                context_rule=context_rule,
+            )
+            if not numbers:
+                recs.append(AtomicRecord(primary_record_id=f"PR-{source_meta['source_id']}-{paragraph['paragraph_index']}-{p.metric}", value_raw=None, unit_raw=None, value_std=None, unit_std=None, parse_confidence=None, parse_notes=None, **base))
+                continue
+            for j, num in enumerate(numbers):
+                recs.append(
+                    AtomicRecord(
+                        primary_record_id=f"PR-{source_meta['source_id']}-{paragraph['paragraph_index']}-{p.metric}-{j}",
+                        value_raw=num["value_raw"],
+                        unit_raw=num["unit_raw"],
+                        value_std=num["value_std"],
+                        unit_std=num["unit_std"],
+                        parse_confidence=num["parse_confidence"],
+                        parse_notes=num["parse_notes"],
+                        **base,
                     )
-                    recs.append(rec)
-                else:
-                    for j, num in enumerate(numbers):
-                        rec = AtomicRecord(
-                            primary_record_id=f"PR-{offset_seed+i}-{idx}-{j}",
-                            source_id=source_meta["source_id"],
-                            source_tier=source_meta["tier"],
-                            book=source_meta["book"],
-                            metric=p.metric,
-                            period=period,
-                            time_detail=time_detail,
-                            time_precision=precision,
-                            region=region,
-                            north_south=ns_map.get(region) if region else None,
-                            value=num["normalized_value"],
-                            unit=num["normalized_unit"],
-                            raw_number=num["raw_number"],
-                            raw_unit=num["raw_unit"],
-                            excerpt=excerpt,
-                            source_url=source_meta["url"],
-                            source_anchor=source_meta.get("anchor"),
-                            confidence=round(confidence, 3),
-                            context_rule=context_rule,
-                        )
-                        recs.append(rec)
-                start = idx + len(kw)
+                )
     return recs
