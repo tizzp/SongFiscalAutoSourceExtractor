@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "song-fiscal"
+version = "0.1.0"
+description = "Automated historical source retrieval and fiscal panel extraction for Northern Song periods"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "click>=8.1",
+  "pandas>=2.2",
+  "openpyxl>=3.1",
+  "pyyaml>=6.0",
+  "requests>=2.31",
+  "beautifulsoup4>=4.12",
+  "lxml>=5.1",
+  "opencc-python-reimplemented>=0.1.7"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["song_fiscal*"]
